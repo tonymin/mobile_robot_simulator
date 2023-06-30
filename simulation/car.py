@@ -1,0 +1,137 @@
+import math
+import numpy as np
+from PyQt5.QtWidgets import QGraphicsItem, QGraphicsObject
+from PyQt5.QtCore import Qt, QRectF, QPointF, QEvent, pyqtProperty, QEventLoop, QTime
+from PyQt5.QtGui import QPainter, QPen, QColor
+from PyQt5.QtCore import QTimer
+import simulationConstants as SIM_CONST
+
+class Car(QGraphicsObject):
+    def __init__(self, x = 0.0, y = 0.0, theta=0.0):
+        super().__init__()
+        
+        # car pose in the global frame
+        self.pos= QPointF(x,y)
+        self.rotate = np.rad2deg(theta)
+        self.zeroOutVelocities()
+
+        # constraints
+        self.MAX_LINEAR_SPEED = 0.1 * 100 # centimeters / second
+        self.MAX_ANGULAR_SPEED = 30 # degrees / second
+        self.TIMEOUT_DRIVE_SPEED = 0.5 # seconds
+        self.ARM_LENGTH = 40
+
+        # in cm
+        self.WIDTH = 24 # cm
+        self.LENGTH = 32 # cm
+        self.HEIGHT = 27 # cm
+        self.ORIGIN_OFFSET_FROM_LENGTH = 4 # assume the origin is 4 cm from the end of car
+
+        self.last_command_time = 0.0
+        self.elapsed_simulation_time=0
+
+    def update_pose(self, current_sim_time):
+        # dt needs to be in seconds since velocities are in seconds
+        dt = (current_sim_time - self.elapsed_simulation_time) / 1000.0
+
+        self.elapsed_simulation_time = current_sim_time
+
+        # self.print()
+
+        # if no new command is received, zero the velocities
+        elapsed = self.elapsed_simulation_time - self.last_command_time
+        if elapsed > self.TIMEOUT_DRIVE_SPEED * 1000: self.zeroOutVelocities()
+
+        # print("Elapsed time (s) since comamnd: %.2f, timeout: %.2f" % (elapsed, self.TIMEOUT_DRIVE_SPEED))
+
+        # get current pose
+        x, y, theta = self.getPose()
+
+        # calculate global velocities
+        # x_dot_g = -self.x_dot * np.sin(theta) + self.y_dot * np.cos(theta)
+        # y_dot_g = self.x_dot * np.cos(theta) + self.y_dot * np.sin(theta)
+
+        # by convention theta is taken from x-axis, increasing in CCW
+        # to change how theta is defined, apply transformation on theta itself
+        theta_transformed = theta
+        x_dot_g = self.x_dot * np.cos(theta_transformed) - self.y_dot * np.sin(theta_transformed)
+        y_dot_g = self.x_dot * np.sin(theta_transformed) + self.y_dot * np.cos(theta_transformed)
+
+        # update pose
+        finalX = x + dt * x_dot_g
+        finalY = y + dt * y_dot_g
+        finalAngle = np.rad2deg(theta) + dt * self.omega_dot
+        # NOTE: self.omega_dot is converted to degrees in the interface function
+
+        self.pos = QPointF(finalX, finalY)
+        self.rotate = finalAngle
+
+    def getPose(self):
+        pos = self.pos
+        angle = np.radians(self.rotate)
+        return [pos.x(), pos.y(), angle]
+    
+    def print(self):
+        print("Pose: (%.2f, %.2f), %.2f deg (%.2f rad) " 
+              % (self.pos.x(), self.pos.y(), self.rotate, np.radians(self.rotate)))
+
+    # main control API
+    def set_mobile_base_speed(self, x_dot, y_dot, omega_dot):
+        omega_dot = 180.0 / math.pi * omega_dot # degrees / seconds
+        x_dot, y_dot, omega_dot = self.__saturate_speeds(x_dot, y_dot, omega_dot)
+        y_dot = -y_dot # flipped ref frame on the robot (x>0 is forward, y>0 is right)
+
+        self.x_dot = x_dot
+        self.y_dot = y_dot
+        self.omega_dot = omega_dot
+
+        self.last_command_time = self.elapsed_simulation_time
+
+    @pyqtProperty(QPointF)
+    def pos(self):
+        return super().pos()
+
+    @pos.setter
+    def pos(self, point):
+        super().setPos(point)
+
+    @pyqtProperty(float)
+    def rotate(self):
+        return super().rotation()
+
+    @rotate.setter
+    def rotate(self, angle):
+        super().setRotation(angle)
+
+    def boundingRect(self):
+        return QRectF(-10, -20, 60, 30)
+
+    def paint(self, painter, option, widget):
+        painter.save()  
+        
+        # draw the car
+        painter.setPen(QPen(Qt.black))
+        painter.setBrush(QColor(255, 0, 0))
+        painter.drawRect(-self.ORIGIN_OFFSET_FROM_LENGTH, -int(self.WIDTH/2), self.LENGTH, self.WIDTH)
+        painter.drawLine(0, 0, 0, 50)
+        painter.drawLine(0, 0, 50, 0)
+        painter.setBrush(Qt.transparent)
+        painter.drawRect(self.LENGTH-self.ORIGIN_OFFSET_FROM_LENGTH, -int(self.WIDTH/2), 20, self.WIDTH)
+
+        # manipulator pickup zone
+        painter.setBrush(Qt.black)  # Set fill color to black
+        painter.drawEllipse(QPointF(0, 0), 5, 5)
+        painter.drawEllipse(QPointF(self.ARM_LENGTH, 0), 5, 5)
+        painter.restore()
+
+    def __saturate_speeds(self, x_dot, y_dot, omega_dot):
+        x_dot = max(-self.MAX_LINEAR_SPEED, min(x_dot, self.MAX_LINEAR_SPEED))
+        y_dot = max(-self.MAX_LINEAR_SPEED, min(y_dot, self.MAX_LINEAR_SPEED))
+        omega_dot = max(-self.MAX_ANGULAR_SPEED, min(omega_dot, self.MAX_ANGULAR_SPEED))
+        return x_dot, y_dot, omega_dot
+
+    def zeroOutVelocities(self):
+        self.x_dot = 0
+        self.y_dot = 0
+        self.omega_dot = 0
+
