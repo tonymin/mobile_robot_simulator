@@ -6,17 +6,15 @@ from PyQt5.QtGui import QPainter, QPen, QColor, QTransform, QFont
 from car import Car
 from obstacle import Obstacle
 from astar import a_star, ramer_douglas_peucker
-from commandControl import CommandControl, Command
 import math
 import simulationConstants as SIM_CONST
 
 class Controller(QObject):
-    def __init__(self, car, commandControl, parent=None):
+    def __init__(self, car, parent=None):
         super().__init__(parent)
         self.car = car
         self.markers = [] # to visualize path planning
 
-        self.commandControl = commandControl
         self.transform = QTransform()
         self.transform.scale(1, -1) # un-invert transformation since we flipped the view to have y-axis grow up
         self.graphicsScene = parent
@@ -190,112 +188,3 @@ class Controller(QObject):
         markerLabel.setPlainText("(%.0f, %.0f)" % (markerX, markerY))
         markerLabel.setFont(font)
         self.markers.append(markerLabel)
-
-    # def issueCommand(self, delay, function, *args, **kwargs):
-    #     # delay is in miliseconds
-    #     self.commandControl.add_command(Command(delay, function, *args, **kwargs))
-
-    # def driveTo(self, x, y, graphicsScene):
-        
-    #     self.issueCommand(0, self._pointAndShoot, 100, 100, self.car)
-    #     # self._pointAndShoot(100, 100, self.car)
-    #     print(1111111)
-    #     # self._pointAndShoot(0, 0, self.car)
-    #     self.issueCommand(4000, self._pointAndShoot, 0, 0, self.car)
-    #     # self._pointAndShoot(x, y, self.car)
-
-
-    #     # paths = self.pathPlanning(x, y, graphicsScene)
-    #     # for (pathX, pathY) in paths:
-    #     #     # self.issueCommand(500, self._pointAndShoot, pathX, pathY, self.car)
-    #     #     self._pointAndShoot(pathX, pathY, self.car)
-
-    # def _pointAndShoot(self, x, y, car):
-    #     # get pose of car and target location
-    #     carX, carY, carTheta = car.getPose()
-    #     carLoc = np.array([carX, carY])
-    #     dst = np.array([x, y])
-
-    #     # we want to drive the robot so that the target is within reach of the arm
-    #     # reduce the amount of displacement needed
-    #     arm_displacement = np.linalg.norm(dst - carLoc) - car.ARM_LENGTH
-
-    #     # if the arm can already reach the target, no need to move further
-    #     # if arm_displacement < 0:
-    #     #     print("Target already in arm's reach, no need to move.")
-    #     #     return
-
-    #     # calculate orientations
-    #     desiredOrientation = dst - carLoc
-    #     carOrientation = np.array([np.cos(carTheta), np.sin(carTheta)])
-
-    #     # re-calculate the desired orientation, but this time to the position where the arm can reach the target
-    #     desiredOrientation = arm_displacement * desiredOrientation / np.linalg.norm(desiredOrientation)
-
-    #     print("car pos: %.2f, %.2f" % (carX, carY))
-    #     print("car orientation: ", carOrientation)
-    #     print("desired pos: %.2f, %.2f" % (x, y))
-    #     print("desired orientation: ", desiredOrientation)
-
-    #     # determine rotation angle and rotation direction
-    #     sign = 1
-    #     if np.cross(carOrientation, desiredOrientation) < 1: sign = -1
-    #     # print("rotate %s" % ("left" if sign == 1 else "right" ))
-    #     # positive is CCW (left)
-        
-    #     delta_theta_numerator = carOrientation.dot(desiredOrientation)
-    #     delta_theta_denominator = (np.linalg.norm(carOrientation)*np.linalg.norm(desiredOrientation))
-    #     delta_theta = sign * np.arccos(delta_theta_numerator/delta_theta_denominator)
-    #     delta_degree = np.rad2deg(delta_theta)
-
-    #     # print("angle between orientation: %.2f radians" % delta_theta)
-    #     print("angle between orientation: %.2f degrees" % delta_degree)
-
-    #     print("----begin rotation-----")
-    #     # break down the complete rotation into control sequences
-    #     angle_displacement_per_step = sign*car.MAX_ANGULAR_SPEED*car.TIMEOUT_DRIVE_SPEED
-    #     numTimeStepsRotation = abs(int(np.round(delta_degree/(angle_displacement_per_step))))
-    #     lastTimeStepDegree = delta_degree - numTimeStepsRotation * angle_displacement_per_step
-    #     stepDegree = sign*car.MAX_ANGULAR_SPEED
-    #     # one sequence is enough
-    #     if abs(angle_displacement_per_step) > abs(delta_degree):
-    #         lastTimeStepDegree = 0
-    #         numTimeStepsRotation= 1
-    #         angle_displacement_per_step = delta_degree
-    #         stepDegree = angle_displacement_per_step / car.TIMEOUT_DRIVE_SPEED
-        
-    #     print("rotate at %.2f deg/s in %d steps (%.2f deg each step) and %.2f degrees on last step" %
-    #             (stepDegree, numTimeStepsRotation, angle_displacement_per_step, lastTimeStepDegree) )
-
-    #     # send control to car
-    #     for i in range(numTimeStepsRotation+1):
-    #         omega_dot = np.radians(stepDegree)
-    #         if i == numTimeStepsRotation:
-    #             omega_dot = np.radians(lastTimeStepDegree)
-    #         self.issueCommand(500, self.car.set_mobile_base_speed, 0, 0, omega_dot)
-
-    #     print("----begin linear translation-----")
-    #     # break down the complete linear translation into control sequences
-    #     linearDisplacement = np.linalg.norm(desiredOrientation)
-    #     linear_displacement_per_timestep = car.MAX_LINEAR_SPEED * car.TIMEOUT_DRIVE_SPEED
-    #     numTimeStepsTranslation = abs(int(np.round(linearDisplacement/(linear_displacement_per_timestep))))
-    #     lastTimeStepDisplacement = linearDisplacement - numTimeStepsTranslation * linear_displacement_per_timestep
-    #     stepDisplacement = car.MAX_LINEAR_SPEED
-
-    #     # one sequence is enough
-    #     if abs(linear_displacement_per_timestep) > abs(linearDisplacement):
-    #         lastTimeStepDisplacement = 0
-    #         numTimeStepsTranslation= 1
-    #         linear_displacement_per_timestep = linearDisplacement
-    #         stepDisplacement = linear_displacement_per_timestep / car.TIMEOUT_DRIVE_SPEED
-    #     print("move forward %.2f cm/s in %d steps (%.2f cm each step) and %.2f cm on last step" %
-    #             (stepDisplacement, numTimeStepsTranslation, linear_displacement_per_timestep, lastTimeStepDisplacement) )
-
-    #     # send control to car
-    #     for i in range(numTimeStepsTranslation+1):
-    #         x_dot = stepDisplacement
-    #         if i == numTimeStepsTranslation:
-    #             x_dot = lastTimeStepDisplacement
-    #         self.issueCommand(500, self.car.set_mobile_base_speed, x_dot, 0, 0)
-    #     print("----finish linear translation-----")
-

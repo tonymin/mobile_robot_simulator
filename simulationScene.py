@@ -5,7 +5,6 @@ from PyQt5.QtCore import QTimer, QTime
 from obstacle import Obstacle
 from simulationControl import Controller
 import simulationConstants as SIM_CONST
-from commandControl import CommandControl, Command
 from PyQt5.QtGui import QTransform
 
 class SimulationScene(QGraphicsScene):
@@ -55,7 +54,6 @@ class SimulationScene(QGraphicsScene):
         # called at every time step / frame
         self.elapsed_simulation_time += SIM_CONST.SIMULATION_TIME_RESOLUTION
         self.car.update_pose(self.elapsed_simulation_time)
-        self.commandControl.update()
         self.controller.update()
 
         if (self.elapsed_simulation_time > 10000):
@@ -73,10 +71,7 @@ class SimulationScene(QGraphicsScene):
         self.addObstacle(-60, -100, 100, 60)
     
     def setupController(self):
-        # for simulation, we need to issue command via commandControl to simulate sleep()
-        self.commandControl = CommandControl(self)
-
-        self.controller = Controller(self.car, self.commandControl, self)
+        self.controller = Controller(self.car, self)
         self.controller.setObstacles(self.obstacles)
 
     def addObstacle(self, x, y, width, height):
