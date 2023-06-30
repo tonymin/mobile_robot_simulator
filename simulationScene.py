@@ -6,6 +6,7 @@ from obstacle import Obstacle
 from simulationControl import Controller
 import simulationConstants as SIM_CONST
 from PyQt5.QtGui import QTransform
+from simulationEnvironment import SimulationEnvironment
 
 class SimulationScene(QGraphicsScene):
     def __init__(self, car, parent):
@@ -16,20 +17,49 @@ class SimulationScene(QGraphicsScene):
         self.transform = QTransform()
         self.transform.scale(1, -1) # un-invert transformation since we flipped the view to have y-axis grow up
         
-        self.obstacles = []
-        self.setupObstacles()
-        self.setupController()
-        self.setupSimulationTimer()
-
+        self.setup()
         self.addAxes()
         self.setupLabels()
+
+    def _tick(self):
+        # called at every time step / frame
+        self.elapsed_simulation_time += SIM_CONST.SIMULATION_TIME_RESOLUTION
+        self.car.update_pose(self.elapsed_simulation_time)
+        self.controller.update()
+
+        if (self.elapsed_simulation_time > 10000):
+            self.time_stamp.setPlainText("Sim Time (s): %.2f" % (self.elapsed_simulation_time/1000.0))
+        else:
+            self.time_stamp.setPlainText("Sim Time (ms): " + str(self.elapsed_simulation_time))
+        self.update()  # update the entire scene
+
+    def mousePressEvent(self, event):
+        x, y = event.scenePos().x(), event.scenePos().y()
+        self.mouseLastClickedPositionInScene.setPlainText("Mouse clicked: (%.2f, %.2f)" % (x,y))
+        self.controller.setTarget(x, y)
+   
+    def mouseMoveEvent(self, event):
+        x, y = event.scenePos().x(), event.scenePos().y()
+        self.mousePositionInScene.setPlainText("Mouse Pos: (%.2f, %.2f)" % (x,y))
+
+    def setup(self):
+        self.simEnv = SimulationEnvironment()
+        self.controller = Controller(self.car, self)
+        self.setupObstacles()
+        self.setupSimulationTimer()
 
     def setupSimulationTimer(self):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self._tick)
         self.timer.start(SIM_CONST.TIME_RESOLUTION)
         self.elapsed_simulation_time = 0
-    
+
+    def setupObstacles(self):
+        obstacles = self.simEnv.getObstacles()
+        self.controller.setObstacles(obstacles)
+        for obstacle in obstacles:
+            self.addItem(obstacle)
+
     def setupLabels(self):
         label_X = -600
 
@@ -49,47 +79,6 @@ class SimulationScene(QGraphicsScene):
         self.mouseLastClickedPositionInScene.setPos(label_X, 360)  # Position text item
         self.addItem(self.mouseLastClickedPositionInScene)
         self.mouseLastClickedPositionInScene.setPlainText("Mouse clicked: ")
-
-    def _tick(self):
-        # called at every time step / frame
-        self.elapsed_simulation_time += SIM_CONST.SIMULATION_TIME_RESOLUTION
-        self.car.update_pose(self.elapsed_simulation_time)
-        self.controller.update()
-
-        if (self.elapsed_simulation_time > 10000):
-            self.time_stamp.setPlainText("Sim Time (s): %.2f" % (self.elapsed_simulation_time/1000.0))
-        else:
-            self.time_stamp.setPlainText("Sim Time (ms): " + str(self.elapsed_simulation_time))
-        self.update()  # update the entire scene
-
-
-    def setupObstacles(self):
-        self.addObstacle(100, 200, 10, 10)
-        self.addObstacle(200, 200, 50, 60)
-        self.addObstacle(250, 100, 30, 20)
-        self.addObstacle(-200, -200, 100, 60)
-        self.addObstacle(-60, -100, 100, 60)
-    
-    def setupController(self):
-        self.controller = Controller(self.car, self)
-        self.controller.setObstacles(self.obstacles)
-
-    def addObstacle(self, x, y, width, height):
-        obstacle = Obstacle(x, y, width, height)
-        self.obstacles.append(obstacle)
-        self.addItem(obstacle)
-
-    def mousePressEvent(self, event):
-        x, y = event.scenePos().x(), event.scenePos().y()
-        self.mouseLastClickedPositionInScene.setPlainText("Mouse clicked: (%.2f, %.2f)" % (x,y))
-        
-        # self.controller.driveTo(x, y, self)
-        self.controller.setTarget(x, y)
-   
-    
-    def mouseMoveEvent(self, event):
-        x, y = event.scenePos().x(), event.scenePos().y()
-        self.mousePositionInScene.setPlainText("Mouse Pos: (%.2f, %.2f)" % (x,y))
 
     def addAxes(self):
         pen = QPen(Qt.black)

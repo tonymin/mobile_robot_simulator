@@ -34,8 +34,6 @@ class Controller(QObject):
 
     def setObstacles(self, obstacles):
         self.obstacles = obstacles
-    
-    
 
     def update(self):
         if self.targets:
