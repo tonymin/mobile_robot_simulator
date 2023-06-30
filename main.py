@@ -35,6 +35,8 @@ class MainWindow(QMainWindow):
 
 
         self.view.scale(1,-1) # flip the y-axis
+
+        
         self.scene.setSceneRect(-400, -400, 800, 800) # set origin to center
 
         # Draw boundary box for the scene

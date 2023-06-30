@@ -1,6 +1,3 @@
-# This is your control code
-from typing import List
-from astar import a_star, ramer_douglas_peucker
 import math
 import numpy as np
 
@@ -12,22 +9,19 @@ class ControlAlgorithms:
     # This function is called once when given a target
     # OPTIONAL: return a sequence of points in an array to be plotted as trajectory markers
     def pathPlanning(self, targetLocation, obstacles):
+        path_points = []
+
         # target location
         x = targetLocation[0]
         y = targetLocation[1]
-
-        # run planning algorithm
-        paths = a_star((self.car.getPose()[0], self.car.getPose()[1]), (x, y), obstacles)
-        simplified_path = ramer_douglas_peucker(paths, 50)
-        self.targets.clear()
-        for (pathX, pathY) in simplified_path: self.targets.append((pathX, pathY))
+        self.targets.append((x, y))
 
         # return planned path to visualize
-        return simplified_path
+        return path_points
 
     # this is where you implement the internals of your control loop
     def controlLoopBody(self):
-        
+
         if self.targets:
             # check if the first target is reached. If yes, remove it.
             if self.isTargetReached(*self.targets[0]):
@@ -84,12 +78,12 @@ class ControlAlgorithms:
         delta_theta = sign * np.arccos(delta_theta_numerator/delta_theta_denominator)
         delta_degree = np.rad2deg(delta_theta)
 
-        # print("car pos: %.2f, %.2f" % (carX, carY))
-        # print("car orientation: ", carOrientation)
-        # print("desired pos: %.2f, %.2f" % (x, y))
-        # print("desired orientation: ", desiredOrientation)
+        print("car pos: %.2f, %.2f" % (carX, carY))
+        print("car orientation: ", carOrientation)
+        print("desired pos: %.2f, %.2f" % (x, y))
+        print("desired orientation: ", desiredOrientation)
+        print("delta_degree: ", delta_degree)
         
-        delta_degree = np.rad2deg(delta_theta)
         if abs(delta_degree) > 5:
             # find omega_dot
             angle_displacement_per_step = sign*car.MAX_ANGULAR_SPEED*car.TIMEOUT_DRIVE_SPEED

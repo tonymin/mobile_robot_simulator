@@ -4,7 +4,6 @@ from PyQt5.QtWidgets import QGraphicsItem, QGraphicsObject
 from PyQt5.QtCore import Qt, QRectF, QPointF, QEvent, pyqtProperty, QEventLoop, QTime
 from PyQt5.QtGui import QPainter, QPen, QColor
 from PyQt5.QtCore import QTimer
-import simulationConstants as SIM_CONST
 
 class Car(QGraphicsObject):
     def __init__(self, x = 0.0, y = 0.0, theta=0.0):
@@ -42,26 +41,21 @@ class Car(QGraphicsObject):
         elapsed = self.elapsed_simulation_time - self.last_command_time
         if elapsed > self.TIMEOUT_DRIVE_SPEED * 1000: self.zeroOutVelocities()
 
-        # print("Elapsed time (s) since comamnd: %.2f, timeout: %.2f" % (elapsed, self.TIMEOUT_DRIVE_SPEED))
-
         # get current pose
         x, y, theta = self.getPose()
 
         # calculate global velocities
-        # x_dot_g = -self.x_dot * np.sin(theta) + self.y_dot * np.cos(theta)
-        # y_dot_g = self.x_dot * np.cos(theta) + self.y_dot * np.sin(theta)
-
         # by convention theta is taken from x-axis, increasing in CCW
-        # to change how theta is defined, apply transformation on theta itself
-        theta_transformed = theta
-        x_dot_g = self.x_dot * np.cos(theta_transformed) - self.y_dot * np.sin(theta_transformed)
-        y_dot_g = self.x_dot * np.sin(theta_transformed) + self.y_dot * np.cos(theta_transformed)
+        x_dot_g = self.x_dot * np.cos(theta) - self.y_dot * np.sin(theta)
+        y_dot_g = self.x_dot * np.sin(theta) + self.y_dot * np.cos(theta)
 
-        # update pose
+
+        # update pose in global frame
         finalX = x + dt * x_dot_g
         finalY = y + dt * y_dot_g
-        finalAngle = np.rad2deg(theta) + dt * self.omega_dot
-        # NOTE: self.omega_dot is converted to degrees in the interface function
+        finalAngle = np.rad2deg(theta) - dt * self.omega_dot
+        # NOTE: self.omega_dot here is in degrees
+        # NOTE: QT takes positive angle as rotation in CW direction, but simulation is CCW
 
         self.pos = QPointF(finalX, finalY)
         self.rotate = finalAngle
@@ -80,6 +74,7 @@ class Car(QGraphicsObject):
         omega_dot = 180.0 / math.pi * omega_dot # degrees / seconds
         x_dot, y_dot, omega_dot = self.__saturate_speeds(x_dot, y_dot, omega_dot)
         y_dot = -y_dot # flipped ref frame on the robot (x>0 is forward, y>0 is right)
+        omega_dot = -omega_dot # flipped ref frame on the robot (z>0 is downward)
 
         self.x_dot = x_dot
         self.y_dot = y_dot
