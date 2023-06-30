@@ -36,7 +36,7 @@ class SimulationScene(QGraphicsScene):
     def mousePressEvent(self, event):
         x, y = event.scenePos().x(), event.scenePos().y()
         self.mouseLastClickedPositionInScene.setPlainText("Mouse clicked: (%.2f, %.2f)" % (x,y))
-        self.controller.setTarget(x, y)
+        self.controller.pathPlanning(x, y)
    
     def mouseMoveEvent(self, event):
         x, y = event.scenePos().x(), event.scenePos().y()

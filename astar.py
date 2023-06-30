@@ -106,8 +106,6 @@ def a_star(start, end, obstacles):
                 
                 if ((nodePosition[0] > obstacle[0] - margin and nodePosition[0] < obstacle[0] + obs_width + margin) and
                     (nodePosition[1] > obstacle[1] - margin and nodePosition[1] < obstacle[1] + obs_height + margin)):
-                    # print("%d, %d too close to obstacle (%d, %d, %d, %d)" 
-                    #       % (nodePosition[0], nodePosition[1], obstacle[0], obstacle[1], obstacle[2] , obstacle[3]))
                     tooCloseToObstacle = True
                     break
 
@@ -128,10 +126,6 @@ def a_star(start, end, obstacles):
             child.h = ((child.position[0] - end_node.position[0]) ** 2) + ((child.position[1] - end_node.position[1]) ** 2)
             child.h += proximityToObstacles # add penalty based on closeness to obstacles
             child.f = child.g + child.h
-
-            # for open_node in open_list:
-            #     if child == open_node and child.f < open_node.f:
-            #         continue
 
             open_list.append(child)
 
