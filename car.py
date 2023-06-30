@@ -35,7 +35,7 @@ class Car(QGraphicsObject):
 
         self.elapsed_simulation_time = current_sim_time
 
-        # self.print()
+        self.print()
 
         # if no new command is received, zero the velocities
         elapsed = self.elapsed_simulation_time - self.last_command_time
@@ -48,6 +48,10 @@ class Car(QGraphicsObject):
         # by convention theta is taken from x-axis, increasing in CCW
         x_dot_g = self.x_dot * np.cos(theta) - self.y_dot * np.sin(theta)
         y_dot_g = self.x_dot * np.sin(theta) + self.y_dot * np.cos(theta)
+        print("x_dot_g:", x_dot_g)
+        print("y_dot_g:", y_dot_g)
+        print("x_dot:", self.x_dot)
+        print("y_dot:", self.y_dot)
 
 
         # update pose in global frame
