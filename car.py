@@ -97,6 +97,18 @@ class Car(QGraphicsObject):
 
         self.last_command_time = self.elapsed_simulation_time
 
+    def set_arm_pose(self, q1, q2):
+        pass
+
+    def close_gripper(self):
+        pass
+
+    def open_gripper(self):
+        pass
+
+    def set_leds(self, red_level, green_level, blue_level):
+        pass
+
     @pyqtProperty(QPointF)
     def pos(self):
         return super().pos()
