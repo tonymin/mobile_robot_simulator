@@ -9,30 +9,23 @@ class ControlAlgorithms:
     # This function is called once when given a target
     # OPTIONAL: return a sequence of points in an array to be plotted as trajectory markers
     def pathPlanning(self, targetLocation, obstacles):
-        path_points = []
-
         # target location
         x = targetLocation[0]
         y = targetLocation[1]
         self.targets.append((x, y))
 
         # return planned path to visualize
-        return path_points
+        return [(x, y)]
 
     # this is where you implement the internals of your control loop
     def controlLoopBody(self):
-
         if self.targets:
-            # check if the first target is reached. If yes, remove it.
-            if self.isTargetReached(*self.targets[0]):
+            print("Moving to : ",self.targets[0])
+            reachedTarget = self.pointAndShoot(*self.targets[0], self.car)
+            if reachedTarget:
                 print("Reached target: ",self.targets[0])
                 self.car.set_mobile_base_speed(0, 0, 0)
                 self.targets.pop(0)
-
-            # if there are still targets, move towards the first one
-            if self.targets:
-                print("Moving to : ",self.targets[0])
-                self.pointAndShoot(*self.targets[0], self.car)
     
     def isTargetReached(self, x, y):
         carX, carY, carTheta = self.car.getPose()
@@ -52,6 +45,9 @@ class ControlAlgorithms:
         return False
         
     def pointAndShoot(self, x, y, car):
+
+        if self.isTargetReached(x,y): return True
+
         # get pose of car and target location
         carX, carY, carTheta = car.getPose()
         carLoc = np.array([carX, carY])
@@ -100,4 +96,6 @@ class ControlAlgorithms:
         if abs(linear_displacement_per_timestep) > abs(linearDisplacement):
             stepDisplacement = linearDisplacement / car.TIMEOUT_DRIVE_SPEED
         car.set_mobile_base_speed(stepDisplacement, 0, 0)
+
+        return False
 
