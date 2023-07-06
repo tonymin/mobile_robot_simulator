@@ -8,6 +8,10 @@ from PyQt5.QtCore import QTimer
 class Car(QGraphicsObject):
     def __init__(self, x = 0.0, y = 0.0, theta=0.0):
         super().__init__()
+
+        self.obstacles = []
+        self.pickup_location = []
+        self.dropoff_location = []
         
         # car pose in the global frame
         self.pos= QPointF(x,y)
@@ -28,6 +32,10 @@ class Car(QGraphicsObject):
 
         self.last_command_time = 0.0
         self.elapsed_simulation_time=0
+
+    def setObstacles(self, obs): self.obstacles = obs
+    def setPickupLocs(self, loc): self.pickup_location = loc
+    def setDropoffLocs(self, loc): self.dropoff_location = loc
 
     def update_pose(self, current_sim_time):
         # dt needs to be in seconds since velocities are in seconds
@@ -68,6 +76,9 @@ class Car(QGraphicsObject):
         pos = self.pos
         angle = np.radians(self.rotate)
         return [pos.x(), pos.y(), angle]
+    
+    def get_poses(self):
+        return [self.getPose(), self.pickup_location, self.dropoff_location, self.obstacles]
     
     def print(self):
         print("Pose: (%.2f, %.2f), %.2f deg (%.2f rad) " 
