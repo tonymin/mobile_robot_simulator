@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import algorithms as alg
 
 class ControlAlgorithms:
     def __init__(self, car) -> None:
