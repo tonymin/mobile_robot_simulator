@@ -28,7 +28,8 @@ class ControlAlgorithms:
                 self.targets.pop(0)
     
     def isTargetReached(self, x, y):
-        carX, carY, carTheta = self.car.getPose()
+        robot_pose, pickup_location, dropoff_location, obstacles = self.car.get_poses()
+        carX, carY, carTheta = robot_pose
         distance_to_target = np.sqrt((x - carX)**2 + (y - carY)**2)
         desired_orientation = math.atan2(y - carY, x - carX)
 
@@ -49,7 +50,8 @@ class ControlAlgorithms:
         if self.isTargetReached(x,y): return True
 
         # get pose of car and target location
-        carX, carY, carTheta = car.getPose()
+        robot_pose, pickup_location, dropoff_location, obstacles = car.get_poses()
+        carX, carY, carTheta = robot_pose
         carLoc = np.array([carX, carY])
         dst = np.array([x, y])
 

@@ -50,7 +50,7 @@ class Car(QGraphicsObject):
         if elapsed > self.TIMEOUT_DRIVE_SPEED * 1000: self.zeroOutVelocities()
 
         # get current pose
-        x, y, theta = self.getPose()
+        x, y, theta = self._getPose()
 
         # calculate global velocities
         # by convention theta is taken from x-axis, increasing in CCW
@@ -72,13 +72,13 @@ class Car(QGraphicsObject):
         self.pos = QPointF(finalX, finalY)
         self.rotate = finalAngle
 
-    def getPose(self):
+    def _getPose(self):
         pos = self.pos
         angle = np.radians(self.rotate)
         return [pos.x(), pos.y(), angle]
     
     def get_poses(self):
-        return [self.getPose(), self.pickup_location, self.dropoff_location, self.obstacles]
+        return [self._getPose(), self.pickup_location, self.dropoff_location, self.obstacles]
     
     def print(self):
         print("Pose: (%.2f, %.2f), %.2f deg (%.2f rad) " 
