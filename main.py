@@ -49,7 +49,7 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
     
     app = QApplication(sys.argv)
-    car = Car(100, -10, math.pi/2)  # Center the car
+    car = Car(100, -100, math.pi/2)  # Center the car
     window = MainWindow(car)
     window.show()
 
