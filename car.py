@@ -22,13 +22,13 @@ class Car(QGraphicsObject):
         self.MAX_LINEAR_SPEED = 0.1 * 100 # centimeters / second
         self.MAX_ANGULAR_SPEED = 30 # degrees / second
         self.TIMEOUT_DRIVE_SPEED = 0.5 # seconds
-        self.ARM_LENGTH = 40
-
+        
         # in cm
         self.WIDTH = 24 # cm
-        self.LENGTH = 32 # cm
+        self.LENGTH = 30 # cm
         self.HEIGHT = 27 # cm
-        self.ORIGIN_OFFSET_FROM_LENGTH = 4 # assume the origin is 4 cm from the end of car
+        self.ORIGIN_OFFSET_FROM_LENGTH = 5 # assume the origin is 4 cm from the end of car
+        self.ARM_LENGTH = self.LENGTH - self.ORIGIN_OFFSET_FROM_LENGTH + 15
 
         self.last_command_time = 0.0
         self.elapsed_simulation_time=0
