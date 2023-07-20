@@ -88,7 +88,7 @@ class Car(QGraphicsObject):
     def set_mobile_base_speed(self, x_dot, y_dot, omega_dot):
         omega_dot = 180.0 / math.pi * omega_dot # degrees / seconds
         x_dot, y_dot, omega_dot = self.__saturate_speeds(x_dot, y_dot, omega_dot)
-        y_dot = -y_dot # flipped ref frame on the robot (x>0 is forward, y>0 is right)
+        y_dot = y_dot # flipped ref frame on the robot (x>0 is forward, y>0 is right)
         omega_dot = -omega_dot # flipped ref frame on the robot (z>0 is downward)
 
         self.x_dot = x_dot
